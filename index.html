@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>CLICKER ONLINE</title>
+<style>
+body {
+  background:#0b1220;
+  color:white;
+  font-family:Arial;
+  text-align:center;
+  padding-top:40px;
+}
+input,button {
+  padding:10px;
+  margin:5px;
+  border-radius:6px;
+  border:none;
+}
+button {
+  background:#3b82f6;
+  color:white;
+  cursor:pointer;
+}
+#game {display:none;}
+</style>
+</head>
+<body>
+
+<h2>🔥 ONLINE CLICKER</h2>
+
+<div id="auth">
+  <input id="login" placeholder="Логин"><br>
+  <input id="password" type="password" placeholder="Пароль"><br>
+  <button onclick="register()">Регистрация</button>
+  <button onclick="login()">Вход</button>
+  <div id="msg"></div>
+</div>
+
+<div id="game">
+  <h3>👤 <span id="user"></span></h3>
+  <h1>Клики: <span id="clicks">0</span></h1>
+  <button onclick="clickBtn()">ТАП 👆</button>
+  <h3>🏆 ТОП</h3>
+  <div id="top"></div>
+</div>
+
+<script>
+const SERVER = "https://clickerv1.onrender.com"; // ТВОЙ СЕРВЕР
+
+let currentUser = "";
+
+async function register() {
+  const login = document.getElementById("login").value;
+  const password = document.getElementById("password").value;
+
+  const res = await fetch(SERVER+"/register", {
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({login,password})
+  });
+
+  const data = await res.json();
+  document.getElementById("msg").innerText = data.ok ? "✅ Успешно" : "❌ Ошибка";
+}
+
+async function login() {
+  const login = document.getElementById("login").value;
+  const password = document.getElementById("password").value;
+
+  const res = await fetch(SERVER+"/login", {
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({login,password})
+  });
+
+  const data = await res.json();
+
+  if(data.ok){
+    currentUser = login;
+    document.getElementById("auth").style.display="none";
+    document.getElementById("game").style.display="block";
+    document.getElementById("user").innerText=login;
+    document.getElementById("clicks").innerText=data.clicks;
+    loadTop();
+  } else {
+    document.getElementById("msg").innerText="❌ Неверный логин";
+  }
+}
+
+async function clickBtn() {
+  const res = await fetch(SERVER+"/click", {
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({login:currentUser})
+  });
+  const data = await res.json();
+  document.getElementById("clicks").innerText=data.clicks;
+  loadTop();
+}
+
+async function loadTop() {
+  const res = await fetch(SERVER+"/top");
+  const data = await res.json();
+  let html="";
+  data.forEach((u,i)=>{
+    html += (i+1)+". "+u.login+" — "+u.clicks+"<br>";
+  });
+  document.getElementById("top").innerHTML=html;
+}
+</script>
+
+</body>
+</html>
